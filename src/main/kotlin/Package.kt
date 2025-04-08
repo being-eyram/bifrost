@@ -18,22 +18,3 @@ data class PackageVersion(
     val archiveUrl: String? = null,
     val pubspec: JsonElement? = null,
 )
-
-
-
-//@Serializable
-//data class Pubspec(
-//    val name: String,
-//    val version: String,
-//    val description: String,
-//    val repository: String,
-//    val environment: Environment,
-//    val dependencies: Map<String, String>,
-//    val dev_dependencies: Map<String, String>
-//)
-//
-//@Serializable
-//data class Environment(
-//    val sdk: String
-//)
-

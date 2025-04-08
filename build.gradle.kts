@@ -30,6 +30,9 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml")
     implementation("com.google.firebase:firebase-admin:9.4.3")
+    implementation("io.ktor:ktor-server-compression:3.1.2")
+    implementation("org.apache.commons:commons-compress:1.27.1")
+    implementation("org.yaml:snakeyaml:2.4")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

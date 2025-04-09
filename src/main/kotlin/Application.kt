@@ -27,6 +27,5 @@ fun Application.module() {
         json(Json { ignoreUnknownKeys = true })
     }
 
-    StorageClient.getInstance(firebaseApp).bucket()
     configureRouting(firebaseApp)
 }

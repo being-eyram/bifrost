@@ -36,3 +36,12 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
+
+// Temporary fix to avoid runtime error with firebase storage when containerized
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.grpc") {
+            useVersion("1.69.0")// specify a consistent version
+        }
+    }
+}

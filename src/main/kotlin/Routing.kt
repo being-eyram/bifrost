@@ -1,5 +1,10 @@
 package com.example
 
+import com.google.cloud.firestore.Firestore
+import com.google.cloud.storage.StorageOptions
+import com.google.firebase.FirebaseApp
+import com.google.firebase.cloud.FirestoreClient
+import com.google.firebase.cloud.StorageClient
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -16,14 +21,19 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.yaml.snakeyaml.Yaml
 import java.io.ByteArrayInputStream
 
-fun Application.configureRouting() {
+fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
     routing {
+        if (firebaseApp == null) { throw InitializationFailedException("Firebase App not initialized!") }
+
+        val firestore  = FirestoreClient.getFirestore(firebaseApp)
+        val bucket = StorageClient.getInstance(firebaseApp).bucket()
+
         get("/api/packages/{packageName}") {
             val packageName = call.request.pathVariables["packageName"]
                 ?: throw MissingFieldException("Missing package name")
 
-            val packageInfo = FirebasePackageService.getPackageInfo(packageName)
+            val packageInfo = FirebasePackageService.getPackageInfo(firestore, packageName)
             val response = Json.encodeToString(packageInfo)
 
             call.respondText(
@@ -56,6 +66,8 @@ fun Application.configureRouting() {
                     val pubspec = extractPubspec(packageTarGz)
 
                     FirebasePackageService.store(
+                        bucket =bucket ,
+                        firestore = firestore,
                         packageBytes = packageTarGz.toByteArray(),
                         pubspec = pubspec
                     )
@@ -106,3 +118,4 @@ private suspend fun extractPubspec(packageTarGz: ByteReadChannel): Map<String, A
 }
 
 class MissingFieldException(message: String) : Exception(message)
+class InitializationFailedException(message: String) : Exception(message)

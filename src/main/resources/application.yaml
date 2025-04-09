@@ -5,3 +5,8 @@ ktor:
   deployment:
     port: 8080
     host: localhost
+
+firebase:
+  projectId: $BIFROST_FB_PROJECT_ID
+  privateKey: $BIFROST_FB_PRIVATE_KEY
+  clientEmail: $BIFROST_FB_CLIENT_EMAIL

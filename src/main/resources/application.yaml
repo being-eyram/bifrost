@@ -3,8 +3,7 @@ ktor:
     modules:
       - com.example.ApplicationKt.module
   deployment:
-    port: 8080
-    host: localhost
+    port: $PORT
 
 firebase:
   projectId: $BIFROST_FB_PROJECT_ID

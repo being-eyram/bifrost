@@ -74,7 +74,6 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
                     val pubspec = extractPubspec(packageBytes)
 
-
                     FirebasePackageService.store(
                         bucket = bucket,
                         firestore = firestore,
@@ -93,6 +92,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
             call.respond(HttpStatusCode.NoContent)
         }
+
 
         get("/api/packages/versions/newUploadFinish") {
 

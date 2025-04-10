@@ -1,6 +1,5 @@
 package com.example
 
-import com.google.firebase.cloud.StorageClient
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
@@ -16,7 +15,7 @@ fun main(args: Array<String>) {
 fun Application.module() {
     val firebaseApp = initializeFirebaseApp()
 
-    install(Compression){
+    install(Compression) {
         gzip()
         deflate()
     }
@@ -24,7 +23,10 @@ fun Application.module() {
         level = Level.TRACE
     }
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        })
     }
 
     configureRouting(firebaseApp)

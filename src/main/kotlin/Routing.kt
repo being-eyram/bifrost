@@ -47,15 +47,17 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
         get("/api/packages/versions/new") {
             val uploadPath = "api/packages/versions/newUpload"
-            val uploadUrl = call.url {
-                protocol = URLProtocol.HTTPS
-                path(uploadPath)
-            }
+            val uploadUrl = URLBuilder.createFromCall(call).apply {
+                encodedPath = uploadPath
+            }.toString()
+
+            log.info("Uploading to $uploadUrl...")
 
             val response = buildJsonObject {
                 put("url", uploadUrl)
                 put("fields", buildJsonObject { })
             }
+
             val jsonResponse = Json.encodeToString(response)
 
             call.respondText(jsonResponse, ContentType.Application.Json)

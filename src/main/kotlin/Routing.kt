@@ -48,6 +48,8 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
         get("/api/packages/versions/new") {
             val uploadPath = "api/packages/versions/newUpload"
             val uploadUrl = URLBuilder.createFromCall(call).apply {
+                //make this http when testing on local
+                protocol = URLProtocol.HTTPS
                 encodedPath = uploadPath
             }.toString()
 

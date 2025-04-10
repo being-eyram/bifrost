@@ -51,7 +51,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                 //make this http when testing on local
                 protocol = URLProtocol.HTTPS
                 encodedPath = ""
-            }.host
+            }.buildString()
 
             val uploadUrl = "$baseUrl$uploadPath"
 

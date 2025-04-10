@@ -20,14 +20,14 @@ data class PackageVersion(
 
 @Serializable
 data class Pubspec(
-    val name: String,
-    val version: String,
-    val description: String,
-    val author: String,
-    val homepage: String,
-    val dependencies: Map<String, Dependency>,
+    val name: String? = null,
+    val version: String? = null,
+    val description: String? = null,
+    val author: String? = null,
+    val homepage: String? = null,
+    val dependencies: Map<String, Dependency>? = null,
     @SerialName("dev_dependencies")
-    val devDependencies: Map<String, String>,
+    val devDependencies: Map<String, String>? = null,
     val environment: Environment,
 )
 
@@ -39,6 +39,6 @@ data class Dependency(
 
 @Serializable
 data class Environment(
-    val sdk: String,
-    val flutter: String
+    val sdk: String? = null,
+    val flutter: String? = null,
 )

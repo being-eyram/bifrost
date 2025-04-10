@@ -95,22 +95,13 @@ object FirebasePackageService {
             .get()
 
         val versions = versionsSnapshot?.documents?.mapNotNull { doc ->
-            val versionData = doc.data
-
-            PackageVersion(
-                version = versionData["version"] as String?,
-                archiveUrl = versionData["archive_url"] as String?,
-                pubspec = Json.encodeToJsonElement(versionData["pubspec"].toString())
-            )
+            val versionData = doc.data.toString()
+            Json.decodeFromString<PackageVersion>(versionData)
         }
 
-        val latestMap = packageData["latest"] as? Map<*, *>
+        val latestMap = packageData["latest"]
         val latest = latestMap?.let { ltst ->
-            PackageVersion(
-                version = ltst["version"] as? String,
-                archiveUrl = ltst["archive_url"] as? String,
-                pubspec = Json.encodeToJsonElement(ltst["pubspec"].toString())
-            )
+            Json.decodeFromString<PackageVersion>(ltst.toString())
         }
 
         return PackageInfo(

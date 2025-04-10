@@ -50,7 +50,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
             val baseUrl = URLBuilder.createFromCall(call).apply {
                 //make this http when testing on local
                 encodedPath = ""
-            }.toString()
+            }.host
 
             val uploadUrl = "https://$baseUrl$uploadPath"
 

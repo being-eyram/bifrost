@@ -24,9 +24,11 @@ import java.io.ByteArrayInputStream
 fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
     routing {
-        if (firebaseApp == null) { throw InitializationFailedException("Firebase App not initialized!") }
+        if (firebaseApp == null) {
+            throw InitializationFailedException("Firebase App not initialized!")
+        }
 
-        val firestore  = FirestoreClient.getFirestore(firebaseApp)
+        val firestore = FirestoreClient.getFirestore(firebaseApp)
         val bucket = StorageClient.getInstance(firebaseApp).bucket()
 
         get("/api/packages/{packageName}") {
@@ -45,7 +47,10 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
         get("/api/packages/versions/new") {
             val uploadPath = "api/packages/versions/newUpload"
-            val uploadUrl = call.url { path(uploadPath) }
+            val uploadUrl = call.url {
+                protocol = URLProtocol.HTTPS
+                path(uploadPath)
+            }
 
             val response = buildJsonObject {
                 put("url", uploadUrl)
@@ -66,7 +71,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                     val pubspec = extractPubspec(packageTarGz)
 
                     FirebasePackageService.store(
-                        bucket =bucket ,
+                        bucket = bucket,
                         firestore = firestore,
                         packageBytes = packageTarGz.toByteArray(),
                         pubspec = pubspec

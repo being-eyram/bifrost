@@ -10,7 +10,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
-import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -18,6 +17,8 @@ import kotlinx.serialization.json.put
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.yaml.snakeyaml.Yaml
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPInputStream
 
 fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
@@ -50,6 +51,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
             //make this http when testing on local
             val uploadUrl = "https://$baseUrl/$uploadPath"
+//            val uploadUrl = "http://0.0.0.0:8080/$uploadPath"
 
             val response = buildJsonObject {
                 put("url", uploadUrl)
@@ -68,12 +70,15 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
             call.receiveMultipart().forEachPart { part ->
                 if (part is PartData.FileItem) {
                     val packageTarGz = part.provider()
-                    val pubspec = extractPubspec(packageTarGz)
+                    val packageBytes = packageTarGz.toByteArray()
+
+                    val pubspec = extractPubspec(packageBytes)
+
 
                     FirebasePackageService.store(
                         bucket = bucket,
                         firestore = firestore,
-                        packageBytes = packageTarGz.toByteArray(),
+                        packageBytes = packageBytes,
                         pubspec = pubspec
                     )
                 }
@@ -103,8 +108,13 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 }
 
 
-private suspend fun extractPubspec(packageTarGz: ByteReadChannel): Map<String, Any> {
-    val packageTar = GZip.decode(packageTarGz).toByteArray()
+private fun extractPubspec(packageTarGz: ByteArray): Map<String, Any> {
+    val outputStream = ByteArrayOutputStream()
+    GZIPInputStream(ByteArrayInputStream(packageTarGz)).use { gzipInputStream ->
+        gzipInputStream.copyTo(outputStream)
+    }
+
+    val packageTar = outputStream.toByteArray()
     val tarInputStream = TarArchiveInputStream(
         ByteArrayInputStream(packageTar)
     )
@@ -117,9 +127,7 @@ private suspend fun extractPubspec(packageTarGz: ByteReadChannel): Map<String, A
     ) ?: throw MissingFieldException("Missing pubspec.yaml")
 
 
-    val pubspec = Yaml().load<Map<String, Any>>(pubspecContent)
-
-    return pubspec
+    return Yaml().load(pubspecContent) as Map<String, Any>
 }
 
 class MissingFieldException(message: String) : Exception(message)

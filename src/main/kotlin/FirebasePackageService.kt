@@ -8,6 +8,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import java.util.*
 
 object FirebasePackageService {
+    private val json = Json { ignoreUnknownKeys = true }
 
     private fun saveFileToBucket(
         bucket: Bucket,
@@ -70,11 +71,29 @@ object FirebasePackageService {
         packageBytes: ByteArray,
         pubspec: Map<String, Any>,
     ) {
-        require(pubspec.containsKey("name")) { "Package name is required" }
-        require(pubspec.containsKey("version")) { "Package version is required" }
+        assertVersionDoesNotExist(pubspec, firestore)
 
-        val packageUrl = saveFileToBucket(bucket, packageBytes, pubspec)
-        saveMetadata(firestore, packageUrl, pubspec)
+        saveFileToBucket(bucket, packageBytes, pubspec).also { url ->
+            saveMetadata(firestore, url, pubspec)
+        }
+    }
+
+    private fun assertVersionDoesNotExist(
+        pubspec: Map<String, Any>,
+        firestore: Firestore
+    ) {
+        val packageName = pubspec["name"] as? String
+            ?: throw IllegalArgumentException("Package name is required")
+
+        val packageVersion = pubspec["version"] as? String
+            ?: throw IllegalArgumentException("Package version is required")
+
+        val versionDocId = "$packageName@$packageVersion"
+        val versionDoc = firestore.collection("versions").document(versionDocId).get().get()
+
+        if (versionDoc.exists()) {
+            throw IllegalStateException("Version $packageVersion of package $packageName already exists.")
+        }
     }
 
     fun getPackageInfo(
@@ -100,8 +119,7 @@ object FirebasePackageService {
 
         val latestMap = packageData["latest"]
         val latest = latestMap?.let { ltst ->
-            Json { ignoreUnknownKeys = true }
-                .decodeFromJsonElement<PackageVersion>(ltst.toJsonElement())
+            json.decodeFromJsonElement<PackageVersion>(ltst.toJsonElement())
         }
 
         return PackageInfo(
@@ -111,6 +129,3 @@ object FirebasePackageService {
         )
     }
 }
-
-
-

@@ -4,6 +4,7 @@ ktor:
       - com.example.ApplicationKt.module
   deployment:
     port: $PORT
+    host: 0.0.0.0
 
 firebase:
   projectId: $BIFROST_FB_PROJECT_ID

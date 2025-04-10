@@ -4,10 +4,8 @@ import com.google.cloud.firestore.Firestore
 import com.google.cloud.firestore.SetOptions
 import com.google.cloud.storage.Bucket
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import java.util.Date
+import java.util.*
 
 object FirebasePackageService {
 
@@ -20,13 +18,13 @@ object FirebasePackageService {
         val packageVersion = pubspec["version"] as String
         val fileName = "$packageName/$packageVersion/package.tar.gz"
 
-        bucket.create(
+        val blob = bucket.create(
             fileName,
             packageBytes,
             "application/gzip"
         )
 
-        return "https://storage.googleapis.com/${bucket.name}/$fileName"
+        return blob.mediaLink
     }
 
     private fun saveMetadata(

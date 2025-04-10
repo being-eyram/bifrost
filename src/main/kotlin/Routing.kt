@@ -1,7 +1,5 @@
 package com.example
 
-import com.google.cloud.firestore.Firestore
-import com.google.cloud.storage.StorageOptions
 import com.google.firebase.FirebaseApp
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.cloud.StorageClient
@@ -111,7 +109,7 @@ private suspend fun extractPubspec(packageTarGz: ByteReadChannel): Map<String, A
         ByteArrayInputStream(packageTar)
     )
 
-    val pubspecContent = TarUtils.extractFileContentFromTar(
+    val pubspecContent = Utils.extractFileContentFromTar(
         tarInputStream,
         shouldExtract = { name ->
             name.endsWith("pubspec.yaml") || name.endsWith("pubspec.yml")

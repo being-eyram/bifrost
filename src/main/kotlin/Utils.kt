@@ -3,7 +3,7 @@ package com.example
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 
-object TarUtils {
+object Utils {
     fun extractFileContentFromTar(
         tarInputStream: TarArchiveInputStream,
         shouldExtract: (String) -> Boolean

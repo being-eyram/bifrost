@@ -4,8 +4,10 @@ import com.google.cloud.firestore.Firestore
 import com.google.cloud.firestore.SetOptions
 import com.google.cloud.storage.Bucket
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
-import java.util.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import java.util.Date
 
 object FirebasePackageService {
 
@@ -94,14 +96,14 @@ object FirebasePackageService {
             .get()
             .get()
 
-        val versions = versionsSnapshot?.documents?.mapNotNull { doc ->
-            val versionData = doc.data.toString()
-            Json.decodeFromString<PackageVersion>(versionData)
-        }
+        val versions = versionsSnapshot
+            ?.documents
+            ?.mapNotNull { doc -> doc.data.toDataClass<PackageVersion>() }
 
         val latestMap = packageData["latest"]
         val latest = latestMap?.let { ltst ->
-            Json.decodeFromString<PackageVersion>(ltst.toString())
+            Json { ignoreUnknownKeys = true }
+                .decodeFromJsonElement<PackageVersion>(ltst.toJsonElement())
         }
 
         return PackageInfo(
@@ -111,5 +113,6 @@ object FirebasePackageService {
         )
     }
 }
+
 
 

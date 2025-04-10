@@ -52,7 +52,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                 encodedPath = ""
             }.host
 
-            val uploadUrl = "https://$baseUrl$uploadPath"
+            val uploadUrl = "https://$baseUrl/$uploadPath"
 
 
             log.info("BaseURl  $baseUrl...")

@@ -5,6 +5,7 @@ plugins {
     kotlin("jvm") version "2.1.20"
     id("io.ktor.plugin") version "3.1.2"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
+    id("com.gradleup.shadow") version "9.0.0-beta12"
 }
 
 group = "com.example"
@@ -32,13 +33,12 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:9.4.3")
     implementation("io.ktor:ktor-server-compression:3.1.2")
     implementation("org.apache.commons:commons-compress:1.27.1")
-    // build.gradle.kts
-    implementation("io.grpc:grpc-netty:1.69.0") // or the version compatible with your Firebase SDK
-    implementation("io.grpc:grpc-protobuf:1.69.0")
-    implementation("io.grpc:grpc-stub:1.69.0")
-    implementation("io.grpc:grpc-api:1.69.0") // important!
 
     implementation("org.yaml:snakeyaml:2.4")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+}
+
+tasks.shadowJar {
+    mergeServiceFiles()
 }

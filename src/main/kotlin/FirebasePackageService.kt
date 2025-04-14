@@ -89,12 +89,8 @@ object FirebasePackageService {
         pubspec: Map<String, Any>,
         firestore: Firestore
     ) {
-        val packageName = pubspec["name"] as? String
-            ?: throw IllegalArgumentException("Package name is required")
-
-        val packageVersion = pubspec["version"] as? String
-            ?: throw IllegalArgumentException("Package version is required")
-
+        val packageName = pubspec["name"] as? String ?: ""
+        val packageVersion = pubspec["version"] as? String ?: ""
         val versionDocId = "$packageName@$packageVersion"
         val versionDoc = firestore.collection("versions").document(versionDocId).get().get()
 

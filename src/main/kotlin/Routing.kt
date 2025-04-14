@@ -88,8 +88,6 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
 
         post("/api/packages/versions/newUpload") {
-            call.request.headers["Content-Type"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-
             val host = URLBuilder.createFromCall(call)
                 .apply { encodedPath = "" }.host
 

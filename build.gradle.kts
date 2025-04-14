@@ -35,6 +35,8 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.27.1")
 
     implementation("org.yaml:snakeyaml:2.4")
+    implementation("io.ktor:ktor-server-host-common:3.1.2")
+    implementation("io.ktor:ktor-server-status-pages:3.1.2")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

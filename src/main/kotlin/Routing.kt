@@ -18,9 +18,16 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.yaml.snakeyaml.Yaml
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
 fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
+    val isDevEnvironment = environment.config.propertyOrNull("ktor.development")?.getString()
+    val scheme = if (isDevEnvironment == "true") "http" else "https"
+    val port = if (isDevEnvironment == "true") {
+        environment.config.propertyOrNull("ktor.deployment.port")?.getString() ?: ""
+    } else ""
+
 
     routing {
         if (firebaseApp == null) {
@@ -44,14 +51,30 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
         }
 
 
+        get("/api/packages/{packageName}/download") {
+            val packageName = call.request.pathVariables["packageName"]
+                ?: throw MissingFieldException("Missing package name")
+
+            val packageInfo = FirebasePackageService.getPackageInfo(firestore, packageName)
+            val packageVersion = packageInfo.latest?.version
+            val blobId = "$packageName/$packageVersion/package.tar.gz"
+
+            val signedUrl = bucket.storage.signUrl(
+                bucket.get(blobId),
+                15, // URL valid for 15 minutes
+                TimeUnit.MINUTES,
+            )
+
+            call.respondRedirect(signedUrl.toString())
+        }
+
+
         get("/api/packages/versions/new") {
             val uploadPath = "api/packages/versions/newUpload"
             val baseUrl = URLBuilder.createFromCall(call)
                 .apply { encodedPath = "" }.host
 
-            //make this http when testing on local
-            val uploadUrl = "https://$baseUrl/$uploadPath"
-//            val uploadUrl = "http://0.0.0.0:8080/$uploadPath"
+            val uploadUrl = "$scheme://$baseUrl:$port/$uploadPath"
 
             val response = buildJsonObject {
                 put("url", uploadUrl)
@@ -67,18 +90,23 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
         post("/api/packages/versions/newUpload") {
             call.request.headers["Content-Type"] ?: return@post call.respond(HttpStatusCode.BadRequest)
 
+            val host = URLBuilder.createFromCall(call)
+                .apply { encodedPath = "" }.host
+
             call.receiveMultipart().forEachPart { part ->
                 if (part is PartData.FileItem) {
                     val packageTarGz = part.provider()
                     val packageBytes = packageTarGz.toByteArray()
 
                     val pubspec = extractPubspec(packageBytes)
+                    val archiveHost = "$scheme://$host:$port"
 
                     FirebasePackageService.store(
                         bucket = bucket,
                         firestore = firestore,
                         packageBytes = packageBytes,
-                        pubspec = pubspec
+                        pubspec = pubspec,
+                        archiveHost = archiveHost,
                     )
                 }
             }

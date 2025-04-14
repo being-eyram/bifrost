@@ -13,19 +13,20 @@ object FirebasePackageService {
     private fun saveFileToBucket(
         bucket: Bucket,
         packageBytes: ByteArray,
-        pubspec: Map<String, Any>
+        pubspec: Map<String, Any>,
+        archiveHost: String
     ): String {
         val packageName = pubspec["name"] as String
         val packageVersion = pubspec["version"] as String
         val fileName = "$packageName/$packageVersion/package.tar.gz"
 
-        val blob = bucket.create(
+        bucket.create(
             fileName,
             packageBytes,
             "application/gzip"
         )
 
-        return blob.mediaLink
+        return "$archiveHost/api/packages/$packageName/download"
     }
 
     private fun saveMetadata(
@@ -70,10 +71,16 @@ object FirebasePackageService {
         firestore: Firestore,
         packageBytes: ByteArray,
         pubspec: Map<String, Any>,
+        archiveHost: String
     ) {
         assertVersionDoesNotExist(pubspec, firestore)
 
-        saveFileToBucket(bucket, packageBytes, pubspec).also { url ->
+        saveFileToBucket(
+            bucket = bucket,
+            packageBytes = packageBytes,
+            pubspec = pubspec,
+            archiveHost = archiveHost
+        ).also { url ->
             saveMetadata(firestore, url, pubspec)
         }
     }

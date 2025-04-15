@@ -23,10 +23,12 @@ import java.util.zip.GZIPInputStream
 
 fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
     val isDevEnvironment = environment.config.propertyOrNull("ktor.development")?.getString()
-    val scheme = if (isDevEnvironment == "true") "http" else "https"
-    val port = if (isDevEnvironment == "true") {
+    val protocol = if (isDevEnvironment == "true") "http://" else "https://"
+    val portEnvVar = if (isDevEnvironment == "true") {
         environment.config.propertyOrNull("ktor.deployment.port")?.getString() ?: ""
     } else ""
+
+    val port = if (portEnvVar.isNotEmpty()) ":$portEnvVar" else ""
 
 
     routing {
@@ -71,10 +73,8 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
         get("/api/packages/versions/new") {
             val uploadPath = "api/packages/versions/newUpload"
-            val baseUrl = URLBuilder.createFromCall(call)
-                .apply { encodedPath = "" }.host
-
-            val uploadUrl = "$scheme://$baseUrl:$port/$uploadPath"
+            val baseUrl = URLBuilder.createFromCall(call).apply { encodedPath = "" }.host
+            val uploadUrl = "$protocol$baseUrl$port/$uploadPath"
 
             val response = buildJsonObject {
                 put("url", uploadUrl)
@@ -88,28 +88,37 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
 
         post("/api/packages/versions/newUpload") {
-            val host = URLBuilder.createFromCall(call)
-                .apply { encodedPath = "" }.host
+            val host = URLBuilder.createFromCall(call).apply { encodedPath = "" }.host
+            var completionUrl: String
 
-            call.receiveMultipart().forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    val packageTarGz = part.provider()
-                    val packageBytes = packageTarGz.toByteArray()
+            try {
+                call.receiveMultipart().forEachPart { part ->
+                    if (part is PartData.FileItem) {
+                        val packageTarGz = part.provider()
+                        val packageBytes = packageTarGz.toByteArray()
 
-                    val pubspec = extractPubspec(packageBytes)
-                    val archiveHost = "$scheme://$host:$port"
+                        val pubspec = extractPubspec(packageBytes)
+                        val archiveHost = "$protocol$host$port"
 
-                    FirebasePackageService.store(
-                        bucket = bucket,
-                        firestore = firestore,
-                        packageBytes = packageBytes,
-                        pubspec = pubspec,
-                        archiveHost = archiveHost,
-                    )
+                        FirebasePackageService.store(
+                            bucket = bucket,
+                            firestore = firestore,
+                            packageBytes = packageBytes,
+                            pubspec = pubspec,
+                            archiveHost = archiveHost,
+                        )
+                    }
+                }
+
+                completionUrl = call.url { path("api/packages/versions/newUploadFinish") }
+            } catch (e: Exception) {
+                completionUrl = call.url {
+                    path("api/packages/versions/newUploadFinish")
+                    encodedParameters = ParametersBuilder().apply {
+                        append("error", e.message.toString())
+                    }
                 }
             }
-
-            val completionUrl = call.url { path("api/packages/versions/newUploadFinish") }
 
             call.response.header(
                 name = HttpHeaders.Location,
@@ -121,14 +130,30 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
 
         get("/api/packages/versions/newUploadFinish") {
+            val error = call.request.queryParameters["error"]
+            val response = when (error) {
+                null -> {
+                    buildJsonObject {
+                        put("success", buildJsonObject {
+                            put("message", "Upload successful")
+                        })
+                    }
+                }
 
-            val response = buildJsonObject {
-                put("success", buildJsonObject {
-                    put("message", "Upload successful")
-                })
+                else -> {
+                    buildJsonObject {
+                        put("error", buildJsonObject {
+                            put("message", error)
+                        })
+                    }
+                }
             }
 
-            call.respondText(response.toString(), ContentType.Application.Json)
+            call.respondText(
+                response.toString(),
+                ContentType.Application.Json,
+                status = if(error == null) HttpStatusCode.OK else HttpStatusCode.BadRequest,
+            )
         }
     }
 }

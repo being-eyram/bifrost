@@ -112,6 +112,8 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
                 completionUrl = call.url { path("api/packages/versions/newUploadFinish") }
             } catch (e: Exception) {
+                log.error(e.message, e)
+
                 completionUrl = call.url {
                     path("api/packages/versions/newUploadFinish")
                     encodedParameters = ParametersBuilder().apply {

@@ -11,6 +11,7 @@ import kotlinx.serialization.json.put
 fun Application.installErrorHandler() {
     install(StatusPages) {
         exception<MissingFieldException> { call, cause ->
+            this@installErrorHandler.log.error(cause.message, cause)
             call.respondError(
                 status = HttpStatusCode.BadRequest,
                 message = cause.message ?: "Missing field",
@@ -19,6 +20,7 @@ fun Application.installErrorHandler() {
         }
 
         exception<InitializationFailedException> { call, cause ->
+            this@installErrorHandler.log.error(cause.message, cause)
             call.respondError(
                 status = HttpStatusCode.InternalServerError,
                 message = cause.message ?: "Init failure",
@@ -27,6 +29,7 @@ fun Application.installErrorHandler() {
         }
 
         exception<Throwable> { call, cause ->
+            this@installErrorHandler.log.error(cause.message, cause)
             call.respondError(
                 status = HttpStatusCode.InternalServerError,
                 message = cause.message ?: "Unexpected server error",

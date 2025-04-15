@@ -95,7 +95,7 @@ object FirebasePackageService {
         val versionDoc = firestore.collection("versions").document(versionDocId).get().get()
 
         if (versionDoc.exists()) {
-            throw IllegalStateException("Version $packageVersion of package $packageName already exists.")
+            throw DuplicatePackageException("Version $packageVersion of package $packageName already exists.")
         }
     }
 
@@ -132,3 +132,5 @@ object FirebasePackageService {
         )
     }
 }
+
+class DuplicatePackageException(message: String) : Exception(message)

@@ -112,7 +112,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
 
                 completionUrl = call.url { path("api/packages/versions/newUploadFinish") }
             } catch (e: Exception) {
-                log.error(e.message, e)
+                log.error(e.message)
 
                 completionUrl = call.url {
                     path("api/packages/versions/newUploadFinish")
@@ -120,6 +120,8 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                         append("error", e.message.toString())
                     }
                 }
+
+                log.info(completionUrl)
             }
 
             call.response.header(

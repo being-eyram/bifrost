@@ -120,8 +120,6 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                         append("error", e.message.toString())
                     }
                 }
-
-                log.info(completionUrl)
             }
 
             call.response.header(
@@ -152,6 +150,8 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                     }
                 }
             }
+
+            log.info(response.toString())
 
             call.respondText(
                 response.toString(),

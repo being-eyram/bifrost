@@ -146,6 +146,7 @@ fun Application.configureRouting(firebaseApp: FirebaseApp? = null) {
                     buildJsonObject {
                         put("error", buildJsonObject {
                             put("message", error)
+                            put("code", "")
                         })
                     }
                 }
